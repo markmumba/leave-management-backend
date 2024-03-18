@@ -4,11 +4,45 @@
 
 package database
 
-import ()
+import (
+	"database/sql"
+	"time"
+)
+
+type Leavebalance struct {
+	BalanceID   int32
+	UserID      sql.NullInt32
+	LeaveTypeID sql.NullInt32
+	Balance     int32
+}
+
+type Leaverequest struct {
+	RequestID   int32
+	UserID      sql.NullInt32
+	LeaveTypeID sql.NullInt32
+	StartDate   time.Time
+	EndDate     time.Time
+	Status      string
+	Reason      sql.NullString
+	ManagerID   sql.NullInt32
+	CreatedAt   sql.NullTime
+}
+
+type Leavetype struct {
+	LeaveTypeID        int32
+	LeaveTypeName      string
+	DefaultEntitlement int32
+}
+
+type Role struct {
+	RoleID   int32
+	RoleName string
+}
 
 type User struct {
 	UserID   int32
 	Username string
 	Password string
 	Email    string
+	RoleID   sql.NullInt32
 }

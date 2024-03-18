@@ -2,7 +2,7 @@
 INSERT INTO
   Users(username, password, email, role_id)
 VALUES
-  ($1, $2, $3) RETURNING user_id;
+  ($1, $2, $3, $4) RETURNING user_id;
 
 
 -- name: FindUserById :one

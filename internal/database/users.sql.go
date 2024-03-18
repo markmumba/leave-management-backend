@@ -7,24 +7,123 @@ package database
 
 import (
 	"context"
+	"database/sql"
 )
+
+const authenticateUser = `-- name: AuthenticateUser :exec
+SELECT
+  user_id, username, password, email, role_id
+FROM
+  Users
+WHERE
+  email = $1
+  AND password = $2
+`
+
+type AuthenticateUserParams struct {
+	Email    string
+	Password string
+}
+
+func (q *Queries) AuthenticateUser(ctx context.Context, arg AuthenticateUserParams) error {
+	_, err := q.db.ExecContext(ctx, authenticateUser, arg.Email, arg.Password)
+	return err
+}
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO
-  Users(username, password, email)
+  Users(username, password, email, role_id)
 VALUES
-  ($1, $2, $3) RETURNING user_id
+  ($1, $2, $3, $4) RETURNING user_id
 `
 
 type CreateUserParams struct {
 	Username string
 	Password string
 	Email    string
+	RoleID   sql.NullInt32
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int32, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.Username, arg.Password, arg.Email)
+	row := q.db.QueryRowContext(ctx, createUser,
+		arg.Username,
+		arg.Password,
+		arg.Email,
+		arg.RoleID,
+	)
 	var user_id int32
 	err := row.Scan(&user_id)
 	return user_id, err
+}
+
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM
+  Users
+WHERE
+  user_id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, userID int32) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, userID)
+	return err
+}
+
+const findUserById = `-- name: FindUserById :one
+SELECT
+  user_id, username, password, email, role_id
+FROM
+  Users
+WHERE
+  user_id = $1
+`
+
+func (q *Queries) FindUserById(ctx context.Context, userID int32) (User, error) {
+	row := q.db.QueryRowContext(ctx, findUserById, userID)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Username,
+		&i.Password,
+		&i.Email,
+		&i.RoleID,
+	)
+	return i, err
+}
+
+const findUsersByRole = `-- name: FindUsersByRole :many
+SELECT
+  user_id, username, password, email, role_id
+FROM
+  Users
+WHERE
+  role_id = $1
+`
+
+func (q *Queries) FindUsersByRole(ctx context.Context, roleID sql.NullInt32) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, findUsersByRole, roleID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Username,
+			&i.Password,
+			&i.Email,
+			&i.RoleID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

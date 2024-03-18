@@ -15,7 +15,7 @@ WHERE
   leave_type_id = $3;
 
 
---name: DeleteLeaveType :exec
+-- name: DeleteLeaveType :exec
 DELETE FROM
   LeaveTypes
 WHERE
