@@ -33,3 +33,8 @@ WHERE
   AND password = $2;
 
 
+-- name: DeleteUser :exec
+DELETE FROM
+  Users
+WHERE
+  user_id = $1;
