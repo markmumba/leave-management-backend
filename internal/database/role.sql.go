@@ -9,18 +9,6 @@ import (
 	"context"
 )
 
-const createRole = `-- name: CreateRole :exec
-INSERT INTO
-  Roles(role_name)
-VALUES
-  ($1)
-`
-
-func (q *Queries) CreateRole(ctx context.Context, roleName string) error {
-	_, err := q.db.ExecContext(ctx, createRole, roleName)
-	return err
-}
-
 const deleteRole = `-- name: DeleteRole :exec
 DELETE FROM
   Roles
@@ -33,6 +21,22 @@ func (q *Queries) DeleteRole(ctx context.Context, roleID int32) error {
 	return err
 }
 
+const findRole = `-- name: FindRole :one
+SELECT
+  role_id, role_name
+FROM
+  Roles
+WHERE
+  role_name = $1
+`
+
+func (q *Queries) FindRole(ctx context.Context, roleName Roletype) (Role, error) {
+	row := q.db.QueryRowContext(ctx, findRole, roleName)
+	var i Role
+	err := row.Scan(&i.RoleID, &i.RoleName)
+	return i, err
+}
+
 const updateRole = `-- name: UpdateRole :exec
 UPDATE
   Roles
@@ -42,7 +46,7 @@ WHERE
   role_id = $1
 `
 
-func (q *Queries) UpdateRole(ctx context.Context, roleName string) error {
+func (q *Queries) UpdateRole(ctx context.Context, roleName Roletype) error {
 	_, err := q.db.ExecContext(ctx, updateRole, roleName)
 	return err
 }

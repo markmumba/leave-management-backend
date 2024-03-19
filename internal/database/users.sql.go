@@ -30,11 +30,11 @@ func (q *Queries) AuthenticateUser(ctx context.Context, arg AuthenticateUserPara
 	return err
 }
 
-const createUser = `-- name: CreateUser :one
+const createUser = `-- name: CreateUser :exec
 INSERT INTO
   Users(username, password, email, role_id)
 VALUES
-  ($1, $2, $3, $4) RETURNING user_id
+  ($1, $2, $3, $4)
 `
 
 type CreateUserParams struct {
@@ -44,16 +44,14 @@ type CreateUserParams struct {
 	RoleID   sql.NullInt32
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int32, error) {
-	row := q.db.QueryRowContext(ctx, createUser,
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
+	_, err := q.db.ExecContext(ctx, createUser,
 		arg.Username,
 		arg.Password,
 		arg.Email,
 		arg.RoleID,
 	)
-	var user_id int32
-	err := row.Scan(&user_id)
-	return user_id, err
+	return err
 }
 
 const deleteUser = `-- name: DeleteUser :exec
@@ -126,4 +124,25 @@ func (q *Queries) FindUsersByRole(ctx context.Context, roleID sql.NullInt32) ([]
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateUser = `-- name: UpdateUser :exec
+UPDATE
+  Users
+SET
+  username = $1,
+  password = $2
+WHERE
+  user_id = $3
+`
+
+type UpdateUserParams struct {
+	Username string
+	Password string
+	UserID   int32
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.ExecContext(ctx, updateUser, arg.Username, arg.Password, arg.UserID)
+	return err
 }

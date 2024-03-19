@@ -1,8 +1,11 @@
 -- +goose Up
+CREATE TYPE Roletype AS ENUM ('admin', 'staff', 'hr', 'manager');
+
+
 CREATE TABLE
   Roles (
     role_id SERIAL PRIMARY KEY,
-    role_name VARCHAR(50) NOT NULL
+    role_name Roletype NOT NULL
   );
 
 

@@ -1,8 +1,10 @@
--- name: CreateRole :exec
-INSERT INTO
-  Roles(role_name)
-VALUES
-  ($1);
+-- name: FindRole :one
+SELECT
+  *
+FROM
+  Roles
+WHERE
+  role_name = $1;
 
 
 -- name: UpdateRole :exec

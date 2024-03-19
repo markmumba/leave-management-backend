@@ -6,8 +6,54 @@ package database
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"time"
 )
+
+type Roletype string
+
+const (
+	RoletypeAdmin   Roletype = "admin"
+	RoletypeStaff   Roletype = "staff"
+	RoletypeHr      Roletype = "hr"
+	RoletypeManager Roletype = "manager"
+)
+
+func (e *Roletype) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = Roletype(s)
+	case string:
+		*e = Roletype(s)
+	default:
+		return fmt.Errorf("unsupported scan type for Roletype: %T", src)
+	}
+	return nil
+}
+
+type NullRoletype struct {
+	Roletype Roletype
+	Valid    bool // Valid is true if Roletype is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullRoletype) Scan(value interface{}) error {
+	if value == nil {
+		ns.Roletype, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.Roletype.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullRoletype) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.Roletype), nil
+}
 
 type Leavebalance struct {
 	BalanceID   int32
@@ -36,7 +82,7 @@ type Leavetype struct {
 
 type Role struct {
 	RoleID   int32
-	RoleName string
+	RoleName Roletype
 }
 
 type User struct {
