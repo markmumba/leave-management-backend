@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	_ "github.com/lib/pq"
 	"server/internal/database"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -16,10 +17,10 @@ import (
 
 var (
 	database_name = os.Getenv("DB_DATABASE")
-	password = os.Getenv("DB_PASSWORD")
-	username = os.Getenv("DB_USERNAME")
-	port     = os.Getenv("DB_PORT")
-	host     = os.Getenv("DB_HOST")
+	password      = os.Getenv("DB_PASSWORD")
+	username      = os.Getenv("DB_USERNAME")
+	port          = os.Getenv("DB_PORT")
+	host          = os.Getenv("DB_HOST")
 )
 
 type Server struct {
@@ -30,11 +31,11 @@ type Server struct {
 func NewServer() *http.Server {
 
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, host, port, database_name)
-	db, err := sql.Open("pgx", connStr)
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	NewServer := &Server{
 		port: port,

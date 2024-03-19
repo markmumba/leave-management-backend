@@ -9,6 +9,20 @@ import (
 	"context"
 )
 
+const createRole = `-- name: CreateRole :one
+INSERT INTO
+  Roles (role_name)
+VALUES
+  ($1) RETURNING role_name
+`
+
+func (q *Queries) CreateRole(ctx context.Context, roleName Roletype) (Roletype, error) {
+	row := q.db.QueryRowContext(ctx, createRole, roleName)
+	var role_name Roletype
+	err := row.Scan(&role_name)
+	return role_name, err
+}
+
 const deleteRole = `-- name: DeleteRole :exec
 DELETE FROM
   Roles

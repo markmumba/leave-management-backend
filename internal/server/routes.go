@@ -8,11 +8,16 @@ import (
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
+
 	e := echo.New()
-	e.Use(middleware.Logger())
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "method=${method}, uri=${uri}, status=${status}\n",
+	}))
 	e.Use(middleware.Recover())
 
 	e.GET("/", s.HelloWorldHandler)
+	e.POST("/createrole", s.CreateRoleHandler)
+	e.POST("/createuser", s.CreateUserHandler)
 
 	return e
 }
@@ -24,4 +29,3 @@ func (s *Server) HelloWorldHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, resp)
 }
-

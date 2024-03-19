@@ -1,3 +1,10 @@
+-- name: CreateRole :one
+INSERT INTO
+  Roles (role_name)
+VALUES
+  ($1) RETURNING role_name;
+
+
 -- name: FindRole :one
 SELECT
   *

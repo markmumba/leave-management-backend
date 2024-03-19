@@ -8,6 +8,7 @@ import (
 	"server/internal/database"
 
 	"github.com/labstack/echo/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *Server) CreateUserHandler(c echo.Context) error {
@@ -27,17 +28,18 @@ func (s *Server) CreateUserHandler(c echo.Context) error {
 		log.Printf("Error %v", err)
 		return c.JSON(http.StatusBadRequest, "error parsing user data ")
 	}
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(params.Password), 12)
 
 	role, err := s.db.FindRole(context.Background(), database.Roletype(params.Role))
 	if err != nil {
 		log.Printf("Error %v", err)
-		return c.JSON(http.StatusInternalServerError,"Role not available")
+		return c.JSON(http.StatusInternalServerError, "Role not available")
 	}
 
 	err = s.db.CreateUser(context.Background(), database.CreateUserParams{
 		Username: params.Username,
 		Email:    params.Email,
-		Password: params.Password,
+		Password: string(hashedPassword),
 		RoleID:   sql.NullInt32{Int32: role.RoleID, Valid: true},
 	})
 
